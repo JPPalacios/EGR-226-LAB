@@ -7,7 +7,9 @@ typedef struct{
     }book;
 
 int parse_file(char filename[], book book_array[]);
-//void print_book(book);
 
-book search_title(book book_array[], int numb_books, char title);
+book print_book(book book_array[]);
+
+void search_title(book book_array[], int numb_books, char *title);
+void search_author(book book_array[], int numb_books, char *author);
 

@@ -2,41 +2,42 @@
 #include <stdlib.h>
 #include <string.h>
 #include "database.h"
+#define MAX 1000
 
 int main()
 {
-    book book_array[1000];
+    book book_array[MAX];
     char filename[] = "Booklist.txt";
-    char title[500];
+    char title[MAX];
+    char author[MAX];
 
-    int user_input, error_check = 0;
+    int user_input = 3, error_check = 0;
     int numb_books = 0;
 
-
-    parse_file(filename, book_array);
-    //book print_book();
+    numb_books = parse_file(filename, book_array);
 
     do{
-        do{
-            printf("Search by...\n");
+        do{                                         // prompts the user to select their choice of input
+            printf("Search by...\n[0] - Title\n[1] - Author\n[2] - ISBN\n");
             error_check = scanf("%d", &user_input);
-            while(getchar() != '\n');
-        }while(user_input > 2);
+            while(getchar() != '\n');               // error checks for user input
+        }while(user_input > 2 || error_check != 1); // cannot select greater than
 
         switch(user_input){
         case 0:
             printf("Title\n");
-
-
-            do{
-                printf("Enter book title: \n");
-                error_check = gets(title);
-                //while(getchar() != '\n');
-            }while(error_check != 0);
-            search_title(book_array, numb_books, title);
+            printf("Enter book title: \n");
+            fflush(stdin);
+            gets(title);
+            search_title(book_array, numb_books, &title);
             break;
         case 1:
             printf("Author Name\n");
+            printf("Enter Author Name: \n");
+            fflush(stdin);
+            gets(author);
+
+//            search_author(book_array, numb_books, &author);
             break;
         case 2:
             printf("ISBN\n");

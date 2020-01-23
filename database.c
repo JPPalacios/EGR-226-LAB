@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "database.h"
+#define MAX 1000
 
  int parse_file(char filename[], book book_array[]){
     int i;
@@ -51,12 +52,53 @@
     }
     fclose(fpin);
 
-    return 0;
+    return i;
 }
 
-book search_title(book book_array[], int numb_books, char title){
+book print_book(book book_array[]){
     int i;
+    for(i = 0; i < MAX; i++){
+    printf("%s", book_array[i].title);
+    }
 
-    printf("BOOOOK");
 }
 
+void search_title(book book_array[], int numb_books, char *title){
+    int i, j = 0;
+    char title_array[MAX];
+
+    for(i = 0; i < numb_books; i++){
+        strcpy(title_array, book_array[i].title);
+
+        if(strcmp(title, title_array) == 0){
+            print_book(book_array[i].title);
+            j++;
+        }
+    }
+
+    if(j == 0){
+        printf("No information could be retrieved for this title\n");
+        j = 0;
+    }
+}
+
+/*
+void search_author(book book_array[], int numb_books, char *author){
+    int i, j = 0;
+    char author_array[MAX];
+
+    for(i = 0; i < numb_books; i++){
+        strcpy(author_array, book_array[i].author);
+
+        if(strcmp(author, author_array) == 0){
+            print_book(book_array[i].author);
+            j++;
+        }
+    }
+
+    if(j == 0){
+        printf("No information could be retrieved for this title\n");
+        j = 0;
+    }
+}
+*/
