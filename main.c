@@ -19,28 +19,28 @@ int main()
 
     do{
         do{                                         // prompts the user to select their choice of input
-            printf("Search by...\n[0] - Title\n[1] - Author\n[2] - ISBN\n");
+            printf("Search by...\n[0] - Title\n[1] - Author\n[2] - ISBN\n\n");
             error_check = scanf("%d", &user_input);
             while(getchar() != '\n');               // error checks for user input
-        }while(user_input > 2 || error_check != 1); // cannot select greater than
+        }while(user_input < 0 || user_input > 2 || error_check != 1); // cannot select greater than 2 but also no less than zero
 
         switch(user_input){
         case 0:
-            printf("Title\n");
+            printf("Searching by title\n");
             printf("Enter book title: \n");
             fflush(stdin);
             gets(title);
             search_title(book_array, numb_books, &title);
             break;
         case 1:
-            printf("Author Name\n");
+            printf("Searching by author name\n");
             printf("Enter Author Name: \n");
             fflush(stdin);
             gets(author);
             search_author(book_array, numb_books, &author);
             break;
         case 2:
-            printf("ISBN\n");
+            printf("Searching by ISBN\n");
             printf("Enter ISBN: \n");
             fflush(stdin);
             gets(ISBN);
