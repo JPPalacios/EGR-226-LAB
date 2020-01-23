@@ -10,6 +10,7 @@ int main()
     char filename[] = "Booklist.txt";
     char title[MAX];
     char author[MAX];
+    char ISBN[MAX];
 
     int user_input = 3, error_check = 0;
     int numb_books = 0;
@@ -36,11 +37,14 @@ int main()
             printf("Enter Author Name: \n");
             fflush(stdin);
             gets(author);
-
-//            search_author(book_array, numb_books, &author);
+            search_author(book_array, numb_books, &author);
             break;
         case 2:
             printf("ISBN\n");
+            printf("Enter ISBN: \n");
+            fflush(stdin);
+            gets(ISBN);
+            search_ISBN(book_array, numb_books, &ISBN);
             break;
         default:
             break;

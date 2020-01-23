@@ -55,11 +55,9 @@
     return i;
 }
 
-book print_book(book book_array[]){
-    int i;
-    for(i = 0; i < MAX; i++){
-    printf("%s", book_array[i].title);
-    }
+book print_book(int book_index, book book_array[]){
+
+    printf("Title: %s| Author: %s| ISBN: %s| Pages: %d| Year Published: %d|\n", book_array[book_index].title, book_array[book_index].author_name, book_array[book_index].ISBN, book_array[book_index].pages, book_array[book_index].year_published);
 
 }
 
@@ -68,10 +66,8 @@ void search_title(book book_array[], int numb_books, char *title){
     char title_array[MAX];
 
     for(i = 0; i < numb_books; i++){
-        strcpy(title_array, book_array[i].title);
-
-        if(strcmp(title, title_array) == 0){
-            print_book(book_array[i].title);
+        if(strcasecmp(title, book_array[i].title) == 0){
+            print_book(i, book_array);
             j++;
         }
     }
@@ -82,23 +78,36 @@ void search_title(book book_array[], int numb_books, char *title){
     }
 }
 
-/*
 void search_author(book book_array[], int numb_books, char *author){
     int i, j = 0;
-    char author_array[MAX];
 
     for(i = 0; i < numb_books; i++){
-        strcpy(author_array, book_array[i].author);
-
-        if(strcmp(author, author_array) == 0){
-            print_book(book_array[i].author);
+        if(strcasecmp(author, book_array[i].author_name) == 0){
+            print_book(i, book_array);
             j++;
         }
     }
 
     if(j == 0){
-        printf("No information could be retrieved for this title\n");
+        printf("No information could be retrieved for this author\n");
         j = 0;
     }
 }
-*/
+
+void search_ISBN(book book_array[], int numb_books, char *ISBN){
+    int i, j = 0;
+
+    for(i = 0; i < numb_books; i++){
+        if(strcasecmp(ISBN, book_array[i].ISBN) == 0){
+            print_book(i, book_array);
+            j++;
+        }
+    }
+
+    if(j == 0){
+        printf("No information could be retrieved for this ISBN\n");
+        j = 0;
+    }
+}
+
+
