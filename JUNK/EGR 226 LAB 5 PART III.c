@@ -1,20 +1,11 @@
-/*LAB 5 PART III
- * Name: Juan Paulo Palacios, Andrew Mullen
- * Date: February 10, 2020
- * Course: EGR 226 904
- * Professor: Kandalaft
- * Description: This program toggles a green, yellow, and red LED
- * when the external button is pushed and held, can reverse
- * the order of the lights if the second button is pushed. This
- * also uses SysTick Timer
- */
+//LAB 5 PART III
 
 #include "msp.h"
 #include <stdint.h>
 
 // Function prototypes
-void SysTick_Init(void);                    // SysTick Initialization Function
-void SysTick_delay(uint16_t delay);         // SysTick Function
+
+uint8_t button_press(void);
 uint8_t DebounceSwitch1(void);
 uint8_t DebounceSwitch2(void);
 
@@ -25,7 +16,8 @@ void GREEN_LED(void);
 int main(void) {
     static uint8_t count = 0;               // count variable to cycle through colored LED functions
 
-     WDT_A->CTL = WDT_A_CTL_PW | WDT_A_CTL_HOLD;           // Stop WDT
+     WDT_A->CTL = WDT_A_CTL_PW |             // Stop WDT
+                 WDT_A_CTL_HOLD;
 
     // BUTTON ONE: GREEN -> YELLOW -> RED
     P4->SEL1 &= ~BIT1;   // set P4.1 as simple I/O
@@ -54,12 +46,11 @@ int main(void) {
     P4->DIR |= BIT0;     // set P4.0 as output pin
 
     while(1){
-        SysTick_Init();
         if(count == 0){
             P3->OUT &= ~BIT2;   // OFF GREEN
             P3->OUT &= ~BIT3;   // OFF YELLOW
             P4->OUT &= ~BIT0;   // OFF RED
-            count++;
+            count = 1;
         }
 
         if(DebounceSwitch1()){
@@ -67,19 +58,19 @@ int main(void) {
                 GREEN_LED();
                 count++;
             }
-            SysTick_delay(1000);
+            __delay_cycles(3000000);
 
             if(DebounceSwitch1() && count == 2){
                 YELLOW_LED();
                 count++;
             }
-            SysTick_delay(1000);
+            __delay_cycles(3000000);
 
             if(DebounceSwitch1() && count == 3){
                 RED_LED();
                 count = 1;
             }
-            SysTick_delay(1000);
+            __delay_cycles(3000000);
         }
 
         if(DebounceSwitch2()){
@@ -87,28 +78,33 @@ int main(void) {
                 RED_LED();
                 count++;
             }
-            SysTick_delay(1000);
+            __delay_cycles(3000000);
 
             if(DebounceSwitch2() && count == 2){
                 YELLOW_LED();
                 count++;
             }
-            SysTick_delay(1000);
+            __delay_cycles(3000000);
 
             if(DebounceSwitch2() && count == 3){
                 GREEN_LED();
                 count = 1;
             }
-            SysTick_delay(1000);
+            __delay_cycles(3000000);
         }
+
+
     }
 }
+
+//uint8_t button_press(void);
+
 
 uint8_t DebounceSwitch1(void){
     int pin_value = 0;
 
        if((P4->IN & 0x02) == 0x00){
-           SysTick_delay(5);
+           __delay_cycles(30000);
            if((P4->IN & 0x02) == 0x00){
                pin_value = 1;           // the button is pressed, changes value to one
            }
@@ -121,7 +117,7 @@ uint8_t DebounceSwitch2(void){
     int pin_value = 0;
 
        if((P4->IN & 0x04) == 0x00){
-           SysTick_delay(5);
+           __delay_cycles(30000);
            if((P4->IN & 0x04) == 0x00){
                pin_value = 1;           // the button is pressed, changes value to one
            }
@@ -147,19 +143,8 @@ void RED_LED(void){
     P4->OUT ^= BIT0;    // TOGGLES RED
 }
 
-void SysTick_Init(void){
-    SysTick -> CTRL = 0;
-    SysTick -> LOAD = 0x00FFFFFF;
-    SysTick -> VAL = 0;
-    SysTick -> CTRL = 0x00000005;
-}
 
-void SysTick_delay(uint16_t delay){
-    SysTick -> LOAD = ((delay * 3000) - 1);
-    SysTick -> VAL = 0;
-    while((SysTick -> CTRL & 0x00010000) == 0)
-    {}
-}
+
 
 /*
 
