@@ -1,11 +1,11 @@
 /*
  * Name: Andrew Mullen, Juan Paulo Palacios
  * Date: February 20, 2020
- *
+ * PART III
  */
 #include "msp.h"
 
-#define RS 1    // define:
+#define RS 1
 #define RW 2
 #define EN 4
 
@@ -19,9 +19,9 @@ void SysTick_Init(void);                // SysTick Initialization Function
 void delay_Ms(uint16_t msec);          // SysTick delay in milliseconds
 void delay_micros(uint32_t usec);      // SysTick delay in microseconds
 
-unsigned char data;                     // global variable
-unsigned char control;                  // global variable
-unsigned char command;                  // global variable
+//unsigned char data;                     // global variable
+//unsigned char control;                  // global variable
+//unsigned char command;                  // global variable
 
 unsigned char first[] = "LABORATORY OVER";
 
