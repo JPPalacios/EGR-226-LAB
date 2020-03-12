@@ -14,7 +14,7 @@ void SysTick_Ms_delay(uint16_t msec);   // SysTick delay in milliseconds
 void Motor_On(void);                    // prototype: turns on motor
 
 double Duty_cycle = 0.10;               // variable: sets the percentage of duty cycle in decimal form
-double T_period = 50;                   // variable: sets the period of the PWM
+double T_period = 20;                   // variable: sets the period of the PWM
 
 void main(void)
 {
