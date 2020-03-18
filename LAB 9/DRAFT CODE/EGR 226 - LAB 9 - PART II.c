@@ -23,6 +23,10 @@ void main(void)
 	 SysTick_Init();     // initialize: all functions
 	 Segment_pinsetup();
 
+	 while(1){
+	     Segment_display();
+	 }
+
 }
 
 void Segment_display(void){
@@ -32,13 +36,13 @@ void Segment_display(void){
 }
 
 void Segment_pinsetup(void){
-    P4->SEL1 &= ~0xFF;      // P4 configured as GPIO
+    P4->SEL1 &= ~0xFF;      // P4.0-P4.7 configured as GPIO
     P4->SEL1 &= ~0xFF;
-    P4->DIR |= 0xFF;        // P4 set as an output
+    P4->DIR |= 0xFF;        // P4.0-P4.7 set as an output
 
-    P5->SEL1 &= ~0x01;      // P5.0, P5.1 configured as GPIO
+    P5->SEL1 &= ~0x01;      // P5.0 configured as GPIO
     P5->SEL1 &= ~0x01;
-    P5->DIR |= 0x01;        // P5.0, P5.1 set as an output
+    P5->DIR |= 0x01;        // P5.0 set as an output
 }
 
 
