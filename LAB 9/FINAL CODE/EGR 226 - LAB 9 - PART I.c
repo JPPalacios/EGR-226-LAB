@@ -45,13 +45,13 @@ void main(void)
 /*This function controls the duty cycle with the buttons*/
 void set_Duty_Cycle(void){
 
-    if(DebounceSwitch1() == 0 && DebounceSwitch2() == 0){
-        while(DebounceSwitch1() == 0 && DebounceSwitch2() == 0){
+    if(DebounceSwitch1() == 0 && DebounceSwitch2() == 0 && DebounceSwitch3() == 0){
+        while(DebounceSwitch1() == 0 && DebounceSwitch2() == 0 && DebounceSwitch3() == 0){
             PWM_function();
         }
     }
 
-    if(DebounceSwitch1() == 1 && DebounceSwitch2() == 0){
+    if(DebounceSwitch1() == 1 && DebounceSwitch2() == 0 && DebounceSwitch3() == 0){
         value++;
         Duty_cycle = value * 0.10;       // sets the duty cycle from 10% to 100%
         PWM_function();
@@ -60,12 +60,16 @@ void set_Duty_Cycle(void){
         }
     }
 
-    if(DebounceSwitch1() == 0 && DebounceSwitch2() == 1){
+    if(DebounceSwitch1() == 0 && DebounceSwitch2() == 1 && DebounceSwitch3() == 0){
         value--;
         Duty_cycle = value * 0.10;       // sets the duty cycle from 10% to 100%
         if(value == 0){
             value = 9;
         }
+    }
+
+    if(DebounceSwitch1() == 0 && DebounceSwitch2() == 0 && DebounceSwitch3() == 1){
+        Duty_cycle = 0.0;       // sets the duty cycle from 10% to 100%
     }
 }
 
@@ -92,6 +96,13 @@ void button_Init(){
     P3->DIR &= ~BIT3;    // set P3.3 as output pin
     P3->REN |= BIT3;     // enable internal resistor
     P3->OUT |= BIT3;     // pull up resistor, negative logic
+
+    // BUTTON TWO: STOP
+    P3->SEL1 &= ~BIT0;   // set P4.0 as simple I/O
+    P3->SEL0 &= ~BIT0;
+    P3->DIR &= ~BIT0;    // set P4.0 as output pin
+    P3->REN |= BIT0;     // enable internal resistor
+    P3->OUT |= BIT0;     // pull up resistor, negative logic
 }
 
 /*This function sets up the pins for Timer A*/
@@ -120,6 +131,19 @@ uint8_t DebounceSwitch2(void){
     if((P3->IN & BIT3) == 0x00){
         SysTick_Ms_delay(50);
         if((P3->IN & BIT3) == 0x00){
+            pin_value = 1;           // the button is pressed, changes value to one
+        }
+    }
+
+    return pin_value;
+}
+
+uint8_t DebounceSwitch3(void){
+    int pin_value = 0;
+
+    if((P4->IN & BIT0) == 0x00){
+        SysTick_Ms_delay(50);
+        if((P4->IN & BIT0) == 0x00){
             pin_value = 1;           // the button is pressed, changes value to one
         }
     }
