@@ -5,9 +5,6 @@
 /* ----------------LCD FUNCTIONS----------------------*/
 
 
-void LCD_PRINT(void){
-}
-
 /*This function initializes the LCD and writes the commands*/
 void LCD_INIT(void){
 
@@ -141,88 +138,206 @@ uint8_t KEYPAD_READ(void){
 }
 
 
-/* ----------------BUTTON FUNCTIONS----------------------*/
+/* ----------------DOOR FUNCTIONS----------------------*/
 
-void BUTTON_INIT(void){
 
-    P6->SEL0 &=~ BIT0; //GREEN
+void DOOR_LED_BUTTONS_INIT(void){
+
+    P#->SEL0 |= BIT#;       // RED LIGHT KY-009
+    P#->SEL1 |= BIT#;
+    P#->DIR |= BIT#;
+    P#->OUT &=~ BIT#;
+
+    P6->SEL0 &=~ BIT0;  // RED BUTTON
     P6->SEL1 &=~ BIT0;
     P6->DIR &=~ BIT0;
     P6->REN |= BIT0;
-    P6->OUT |= BIT0;
-    P6->IES |= BIT0;
-    P6->IE  |= BIT0;
+    P#->OUT |= BIT#;
 
-    P6->SEL0 &=~ BIT1; //RED
+    P#->SEL0 |= BIT#;       // GREEN LIGHT KY-009
+    P#->SEL1 |= BIT#;
+    P#->DIR |= BIT#;
+    P#->OUT &=~ BIT#;
+
+    P6->SEL0 &=~ BIT1;   // GREEN BUTTON
     P6->SEL1 &=~ BIT1;
     P6->DIR &=~ BIT1;
     P6->REN |= BIT1;
     P6->OUT |= BIT1;
-    P6->IES |= BIT1;
-    P6->IE  |= BIT1;
 
-    P6->IFG = 0;
-
-}
-
-void PORT6_IRQHandler(void){
-
-    uint8_t status = P6->IFG;
-
-    if(DEBOUNCE_BUTTON1()){
-        while((P6->IFG & BIT0) && DEBOUNCE_BUTTON1()){
-            P6->OUT ^= BIT4;
-            P6->OUT &=~ BIT5;
-            P6->IFG = 0;
-        }
-    }
-
-    if(DEBOUNCE_BUTTON2()){
-        while((P6->IFG & BIT1) && DEBOUNCE_BUTTON2()){
-            P6->OUT ^= BIT5;
-            P6->OUT &=~ BIT4;
-            P6->IFG = 0;
-        }
-    }
-
+    // NOTE FOR TOMORROW:
+    // SOLDER PINS, FIGURE BUTTON PINS, BUILD LIGHT CIRCUIT, BUILD SERVO CIRCUIT,
 
 }
 
-void DOOR_LED_INIT(void){
+uint8_t DOOR_DEBOUNCE_BUTTONS(void){
 
-    P6->SEL0 &=~ BIT4;  //RED
-    P6->SEL1 &=~ BIT4;
-    P6->DIR |= BIT4;
-    P6->OUT &=~ BIT4;
-
-    P6->SEL0 &=~ BIT5;  //RED
-    P6->SEL1 &=~ BIT5;
-    P6->DIR |= BIT5;
-    P6->OUT &=~ BIT5;
-}
-
-
-uint8_t DEBOUNCE_BUTTON1(void){
-
-       if((P6->IN & BIT4) == 0x00){
+       if((P#->IN & BIT#) == 0x00){     // GREEN PUSH BUTTON PRESSED, OPEN DOOR
            SYSTICK_DELAY_MS(7);
-           if((P6->IN & BIT4) == 0x00);
-               return 1;
+           if((P#->IN & BIT#) == 0x00);
+               door_button = 1;
        }
 
-       return 0;
-}
-
-uint8_t DEBOUNCE_BUTTON2(void){
-
-       if((P6->IN & BIT5) == 0x00){
-           SYSTICK_DELAY_MS(3);
-           if((P6->IN & BIT5) == 0x00);
-               return 1;
+       if((P#->IN & BIT#) == 0x00){     // RED PUSH BUTTON PRESSED, CLOSE DOOR
+           SYSTICK_DELAY_MS(7);
+           if((P#->IN & BIT#) == 0x00);
+               door_button = 2;
        }
 
-       return 0;
+       return door_button;
 }
+
+
+/* ----------------MOTOR FUNCTIONS----------------------*/
+
+
+void MOTOR_TIMERA_INIT(void){
+
+    P5->SEL0 |= BIT6;               // set P5.6 as GPIO for PWM
+    P5->SEL1 &= ~BIT6;
+    P5->DIR |= BIT6;                // set P5.6 as TA2.1
+
+    TIMER_A2->CCR[0] = 50000 - 1;
+    TIMER_A2->CCTL[1] = 0x00E0;
+    TIMER_A2->CCR[1] = PWM_value;
+    TIMER_A2->CTL = 0x0214;         // SMCLK, UP Mode, CLEAR TAR
+
+}
+
+void MOTOR_DUTY_CYCLE(void){
+
+    int i;
+
+    if(numb == 4){
+        Duty_cycle = 0.20;       // sets the duty cycle from 10% to 100%
+        MOTOR_TIMERA_INIT();
+        sprintf(motor_speed,"%g %%", Duty_cycle * 100);
+
+        LCD_COMMAND(0x96);
+        for(i = 0; motor_speed[i] != '\0'; i++){
+            LCD_DATA(motor_speed[i]);
+            LCD_DELAY(50);
+        }
+    }
+    if(numb == 5){
+        Duty_cycle = 0.40;       // sets the duty cycle from 10% to 100%
+        MOTOR_TIMERA_INIT();
+        sprintf(motor_speed,"%g %%", Duty_cycle * 100);
+        LCD_COMMAND(0x96);
+        for(i = 0; motor_speed[i] != '\0'; i++){
+            LCD_DATA(motor_speed[i]);
+            LCD_DELAY(50);
+        }
+    }
+    if(numb == 6){
+        Duty_cycle = numb * 0.60;       // sets the duty cycle from 10% to 100%
+        MOTOR_TIMERA_INIT();
+        sprintf(motor_speed,"%g %%", Duty_cycle * 100);
+        LCD_COMMAND(0x97);
+        for(i = 0; motor_speed[i] != '\0'; i++){
+            LCD_DATA(motor_speed[i]);
+            LCD_DELAY(50);
+        }
+    }
+    if(numb == 11){
+        Duty_cycle = 0.80;               // sets the duty cycle to 0%
+        MOTOR_TIMERA_INIT();
+        sprintf(motor_speed,"%g %%", Duty_cycle * 100);
+        LCD_COMMAND(0x96);
+        for(i = 0; motor_speed[i] != '\0'; i++){
+            LCD_DATA(motor_speed[i]);
+            LCD_DELAY(50);
+        }
+    }
+    if(numb == 12){
+        Duty_cycle = 1.00;               // sets the duty cycle to 0%
+        MOTOR_TIMERA_INIT();
+        sprintf(motor_speed,"%g %%", Duty_cycle * 100);
+        LCD_COMMAND(0x96);
+        for(i = 0; motor_speed[i] != '\0'; i++){
+            LCD_DATA(motor_speed[i]);
+            LCD_DELAY(50);
+        }
+    }
+
+}
+
+uint8_t MOTOR_DEBOUNCE_BUTTON(void){
+
+    if((P6->IN & BIT6) == 0x00){     // MOTOR PUSH BUTTON PRESSED, STOP MOTOR
+        SYSTICK_DELAY_MS(7);
+        if((P6->IN & BIT6) == 0x00);
+            motor_button = 1;
+    }else{
+        motor_button = 0;
+    }
+
+    return motor_button;
+}
+
+
+/* ----------------LIGHTS FUNCTIONS----------------------*/
+
+
+void LIGHT_LED_BUTTONS_INIT(void){
+
+    P#->SEL0 |= BIT#;       // RED LIGHT KY-009
+    P#->SEL1 |= BIT#;
+    P#->DIR |= BIT#;
+    P#->OUT |= BIT#;
+
+    P#->SEL0 |= BIT#;       // GREEN LIGHT KY-009
+    P#->SEL1 |= BIT#;
+    P#->DIR |= BIT#;
+    P#->OUT |= BIT#;
+
+    P#->SEL0 |= BIT#;       // BLUE LIGHT KY-009
+    P#->SEL1 |= BIT#;
+    P#->DIR |= BIT#;
+    P#->OUT |= BIT#;
+
+    P6->SEL0 &=~ BIT0;      // RED BUTTON
+    P6->SEL1 &=~ BIT0;
+    P6->DIR &=~ BIT0;
+    P6->REN |= BIT0;
+    P6->OUT |= BIT0;
+
+    P6->SEL0 &=~ BIT1;      // GREEN BUTTON
+    P6->SEL1 &=~ BIT1;
+    P6->DIR &=~ BIT1;
+    P6->REN |= BIT1;
+    P6->OUT |= BIT1;
+
+    P6->SEL0 &=~ BIT2;      // BLUE BUTTON * RE-PIN
+    P6->SEL1 &=~ BIT2;
+    P6->DIR &=~ BIT2;
+    P6->REN |= BIT2;
+    P6->OUT |= BIT2;
+
+}
+
+uint8_t LIGHTS_DEBOUNCE_BUTTONS(void){
+
+    if((P#->IN & BIT#) == 0x00){     // MOTOR PUSH BUTTON PRESSED, STOP MOTOR
+        SYSTICK_DELAY_MS(7);
+        if((P#->IN & BIT#) == 0x00);
+        light_button = 1;
+    }else if((P#->IN & BIT#) == 0x00){     // MOTOR PUSH BUTTON PRESSED, STOP MOTOR
+        SYSTICK_DELAY_MS(7);
+        if((P#->IN & BIT#) == 0x00);
+        light_button = 2;
+    }else if((P#->IN & BIT#) == 0x00){     // MOTOR PUSH BUTTON PRESSED, STOP MOTOR
+        SYSTICK_DELAY_MS(7);
+        if((P#->IN & BIT#) == 0x00);
+        light_button = 3;
+    }else{
+        light_button = 0;
+    }
+
+    return light_button;
+
+}
+
 
 
 /* ----------------SYSTICK FUNCTIONS----------------------*/
@@ -248,68 +363,4 @@ void SYSTICK_DELAY_MS(uint16_t systick_delay){
     while((SysTick->CTRL & 0x00010000) == 0);
 
 }
-
-
-/* ----------------TIMERA FUNCTIONS----------------------*/
-
-
-void TIMERA_INIT(void){
-
-    //IRPORT->SEL0 |= IRPIN;      // CONFIG. GPIO -> PWM OUTPUT
-    //IRPORT->SEL1 &=~ (IRPIN);
-    //IRPORT->DIR |= IRPIN;       // P2.4 SET TA0.1
-
-    TIMER_A0->CTL = TIMER_A_CTL_SSEL__SMCLK |
-                    TIMER_A_CTL_MC__UP |
-                    TIMER_A_CTL_CLR |
-                    TIMER_A_CTL_ID__8 |
-                    TIMER_A_CTL_IE;         // SMCLK, UP MODE, CLEAR TIMER, DIV/8
-
-    TIMER_A0->CCR[0] = FREQUENCY;           // 10 HZ
-    TIMER_A0->CCR[1] = DUTY_CYCLE;          // 50% DUTY CYCLE*/
-    TIMER_A0->CCTL[1] = 0x4914;             // RISING CAPTURE, SYNCH., OUTBIT VAL.,
-
-}
-
-void TA0_N_IRQHandler(void){
-
-    if(TIMER_A0->CCTL[1] & BIT0){
-        TIMER_A0->CCTL[1] &=~ BIT0;        // CLEAR INTERUPT FLAG
-        TIMER_A0->CCTL[1] &=~ BIT1;        // CLEAR OVERFLOW FLAG
-        //IRPORT->OUT ^= LEDPIN;
-    }
-
-}
-
-
-/* ----------------ADC14 FUNCTIONS----------------------*/
-
-
-void ADC_INIT(void){
-
-    //P5->SEL1 |= 0x20;                   // P5.5 configured for AO
-    //P5->SEL0 |= 0x20;
-
-    ADC14->CTL0 &=~ ADC14_CTL0_ENC;     // power on, disabled during configuration
-    ADC14->CTL0 |= 0x04200210;          // S/H pulse mode, SMCLCK, 16 sample clocks,
-    ADC14->CTL1 = 0x00000030;           // 14 bit resolution
-    ADC14->CTL1 |= 0x00000000;          // convert at memory register 5
-    ADC14->MCTL[0] = 0x00000000;        // A0 input, single ended, Vref = AVCC
-    ADC14->CTL0 |= ADC14_CTL0_ENC;      // Enable ADC after configuration
-
-}
-
-void ADC_CONVERT(void){
-
-    ADC14->CTL0 |= 1;               // start conversion
-    while (!ADC14->IFGR0);
-    ADC_value = ADC14->MEM[0];
-    voltage = (ADC_value * 3.3) / 16384;
-
-    //Temp_Celcius = (ADC_value * 0.02) - 50;
-    //printf("Voltage: %g\tTemperature: %g\n",voltage, Temp_Celcius);
-    SYSTICK_DELAY_MS(500);
-}
-
-
 
