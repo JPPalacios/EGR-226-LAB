@@ -143,55 +143,86 @@ uint8_t KEYPAD_READ(void){
 
 void DOOR_LED_BUTTONS_INIT(void){
 
-    P#->SEL0 |= BIT#;       // RED LIGHT KY-009
-    P#->SEL1 |= BIT#;
-    P#->DIR |= BIT#;
-    P#->OUT &=~ BIT#;
+    P3->SEL0 &=~ BIT0;        // RED LIGHT
+    P3->SEL1 &=~ BIT0;
+    P3->DIR |= BIT0;
+    P3->OUT &=~ BIT0;
 
-    P6->SEL0 &=~ BIT0;  // RED BUTTON
-    P6->SEL1 &=~ BIT0;
-    P6->DIR &=~ BIT0;
-    P6->REN |= BIT0;
-    P#->OUT |= BIT#;
+    P1->SEL0 &=~ BIT0;        // GREEN LIGHT
+    P1->SEL1 &=~ BIT0;
+    P1->DIR |= BIT0;
+    P1->OUT &=~ BIT0;
 
-    P#->SEL0 |= BIT#;       // GREEN LIGHT KY-009
-    P#->SEL1 |= BIT#;
-    P#->DIR |= BIT#;
-    P#->OUT &=~ BIT#;
+    P1->SEL0 &=~ BIT6;       // RED BUTTON
+    P1->SEL1 &=~ BIT6;
+    P1->DIR &=~ BIT6;
+    P1->REN |= BIT6;
+    P1->OUT |= BIT6;
+    P1->IES |= BIT6;
+    P1->IE |= BIT6;
 
-    P6->SEL0 &=~ BIT1;   // GREEN BUTTON
-    P6->SEL1 &=~ BIT1;
-    P6->DIR &=~ BIT1;
-    P6->REN |= BIT1;
-    P6->OUT |= BIT1;
+    P1->SEL0 &=~ BIT7;       // GREEN BUTTON
+    P1->SEL1 &=~ BIT7;
+    P1->DIR &=~ BIT7;
+    P1->REN |= BIT7;
+    P1->OUT |= BIT7;
+    P1->IES |= BIT7;
+    P1->IE |= BIT7;
 
-    // NOTE FOR TOMORROW:
-    // SOLDER PINS, FIGURE BUTTON PINS, BUILD LIGHT CIRCUIT, BUILD SERVO CIRCUIT,
+    P1->IFG &=~ 0;
 
 }
 
 uint8_t DOOR_DEBOUNCE_BUTTONS(void){
 
-       if((P#->IN & BIT#) == 0x00){     // GREEN PUSH BUTTON PRESSED, OPEN DOOR
-           SYSTICK_DELAY_MS(7);
-           if((P#->IN & BIT#) == 0x00);
-               door_button = 1;
-       }
+    if((P3->IN & BIT0) == 0x00){     // RED PUSH BUTTON PRESSED, OPEN DOOR
+        SYSTICK_DELAY_MS(50);
+        if((P3->IN & BIT0) == 0x00);
+            door_button = 1;
+    }
 
-       if((P#->IN & BIT#) == 0x00){     // RED PUSH BUTTON PRESSED, CLOSE DOOR
-           SYSTICK_DELAY_MS(7);
-           if((P#->IN & BIT#) == 0x00);
-               door_button = 2;
-       }
+    if((P1->IN & BIT7) == 0x00){     // GREEN PUSH BUTTON PRESSED, CLOSE DOOR
+        SYSTICK_DELAY_MS(50);
+        if((P1->IN & BIT7) == 0x00);
+            door_button = 2;
+    }
 
-       return door_button;
+    return door_button;
+}
+
+void DOOR_TIMERA_INIT(void){
+
+    P6->SEL0 |= BIT6;               // set P6.6 as GPIO for PWM
+    P6->SEL1 &= ~BIT6;
+    P6->DIR |= BIT6;                // set P6.6 as TA2.3
+
+    //TIMER_A2->CCR[0] = 50000 - 1;
+    TIMER_A2->CCTL[3] = 0x00E0;
+    TIMER_A2->CCR[3] = 50000.0 * door_Duty_cycle;
+    //TIMER_A2->CTL = 0x0214;         // SMCLK, UP Mode, CLEAR TAR
+
 }
 
 
 /* ----------------MOTOR FUNCTIONS----------------------*/
 
+void MOTOR_BUTTON_INIT(void){
+
+    P1->SEL0 &=~ BIT5;       // STOP BUTTON
+    P1->SEL1 &=~ BIT5;
+    P1->DIR &=~ BIT5;
+    P1->REN |= BIT5;
+    P1->OUT |= BIT5;
+    P1->IES |= BIT5;
+    P1->IE |= BIT5;
+
+    P1->IFG &=~ 0;
+
+}
 
 void MOTOR_TIMERA_INIT(void){
+
+  //  double T_period = 50000.0;
 
     P5->SEL0 |= BIT6;               // set P5.6 as GPIO for PWM
     P5->SEL1 &= ~BIT6;
@@ -199,7 +230,7 @@ void MOTOR_TIMERA_INIT(void){
 
     TIMER_A2->CCR[0] = 50000 - 1;
     TIMER_A2->CCTL[1] = 0x00E0;
-    TIMER_A2->CCR[1] = PWM_value;
+    TIMER_A2->CCR[1] = 50000.0 * Duty_cycle;
     TIMER_A2->CTL = 0x0214;         // SMCLK, UP Mode, CLEAR TAR
 
 }
@@ -208,10 +239,10 @@ void MOTOR_DUTY_CYCLE(void){
 
     int i;
 
-    if(numb == 4){
-        Duty_cycle = 0.20;       // sets the duty cycle from 10% to 100%
+    if(numb < 10){
+        Duty_cycle = numb * 0.10;       // sets the duty cycle from 10% to 100%
         MOTOR_TIMERA_INIT();
-        sprintf(motor_speed,"%g %%", Duty_cycle * 100);
+        sprintf(motor_speed,"% g %%", Duty_cycle * 100);
 
         LCD_COMMAND(0x96);
         for(i = 0; motor_speed[i] != '\0'; i++){
@@ -219,30 +250,10 @@ void MOTOR_DUTY_CYCLE(void){
             LCD_DELAY(50);
         }
     }
-    if(numb == 5){
-        Duty_cycle = 0.40;       // sets the duty cycle from 10% to 100%
-        MOTOR_TIMERA_INIT();
-        sprintf(motor_speed,"%g %%", Duty_cycle * 100);
-        LCD_COMMAND(0x96);
-        for(i = 0; motor_speed[i] != '\0'; i++){
-            LCD_DATA(motor_speed[i]);
-            LCD_DELAY(50);
-        }
-    }
-    if(numb == 6){
-        Duty_cycle = numb * 0.60;       // sets the duty cycle from 10% to 100%
-        MOTOR_TIMERA_INIT();
-        sprintf(motor_speed,"%g %%", Duty_cycle * 100);
-        LCD_COMMAND(0x97);
-        for(i = 0; motor_speed[i] != '\0'; i++){
-            LCD_DATA(motor_speed[i]);
-            LCD_DELAY(50);
-        }
-    }
     if(numb == 11){
-        Duty_cycle = 0.80;               // sets the duty cycle to 0%
+        Duty_cycle = 0.00;               // sets the duty cycle to 0%
         MOTOR_TIMERA_INIT();
-        sprintf(motor_speed,"%g %%", Duty_cycle * 100);
+        sprintf(motor_speed,"% g  %%", Duty_cycle * 100);
         LCD_COMMAND(0x96);
         for(i = 0; motor_speed[i] != '\0'; i++){
             LCD_DATA(motor_speed[i]);
@@ -262,11 +273,12 @@ void MOTOR_DUTY_CYCLE(void){
 
 }
 
+
 uint8_t MOTOR_DEBOUNCE_BUTTON(void){
 
-    if((P6->IN & BIT6) == 0x00){     // MOTOR PUSH BUTTON PRESSED, STOP MOTOR
-        SYSTICK_DELAY_MS(7);
-        if((P6->IN & BIT6) == 0x00);
+    if((P1->IN & BIT5) == 0x00){     // MOTOR PUSH BUTTON PRESSED, STOP MOTOR
+        SYSTICK_DELAY_MS(50);
+        if((P1->IN & BIT5) == 0x00);
             motor_button = 1;
     }else{
         motor_button = 0;
@@ -280,7 +292,7 @@ uint8_t MOTOR_DEBOUNCE_BUTTON(void){
 
 
 void LIGHT_LED_BUTTONS_INIT(void){
-
+/*
     P#->SEL0 |= BIT#;       // RED LIGHT KY-009
     P#->SEL1 |= BIT#;
     P#->DIR |= BIT#;
@@ -313,11 +325,11 @@ void LIGHT_LED_BUTTONS_INIT(void){
     P6->DIR &=~ BIT2;
     P6->REN |= BIT2;
     P6->OUT |= BIT2;
-
+*/
 }
 
-uint8_t LIGHTS_DEBOUNCE_BUTTONS(void){
-
+void LIGHTS_DEBOUNCE_BUTTONS(void){
+/*
     if((P#->IN & BIT#) == 0x00){     // MOTOR PUSH BUTTON PRESSED, STOP MOTOR
         SYSTICK_DELAY_MS(7);
         if((P#->IN & BIT#) == 0x00);
@@ -335,7 +347,7 @@ uint8_t LIGHTS_DEBOUNCE_BUTTONS(void){
     }
 
     return light_button;
-
+*/
 }
 
 

@@ -8,8 +8,12 @@ void MAIN_SELECTION(void);
 void DOOR_MENU(void);
 void DOOR_SELECTION(void);
 
+
+
 void MOTOR_MENU(void);
 void MOTOR_SELECTION(void);
+
+
 
 void LIGHTS_MENU(void);
 void LIGHTS_SELECTION(void);
@@ -21,8 +25,8 @@ unsigned char main_menu2[] = "2 - MOTOR";
 unsigned char main_menu3[] = "3 - LIGHTS";
 
 unsigned char door_menu0[] = "DOOR MENU";
-unsigned char door_menu1[] = "B1 - OPEN DOOR";
-unsigned char door_menu2[] = "B2 - CLOSE DOOR";
+unsigned char door_menu1[] = "B1 - CLOSE DOOR";
+unsigned char door_menu2[] = "B2 - OPEN DOOR";
 unsigned char door_menu3[] = "* KEY TO RETURN";
 
 unsigned char motor_menu0[] = "MOTOR MENU";
@@ -46,13 +50,12 @@ void main(void)
     LCD_INIT();
     KEYPAD_INIT();
 
-	BUTTON_INIT();
-	DOOR_LED_INIT();
+    DOOR_LED_BUTTONS_INIT();
+    NVIC->ISER[1] = 1 << ((PORT1_IRQn) & 31);
+    __enable_interrupt();
 
+    MOTOR_BUTTON_INIT();
 	MOTOR_TIMERA_INIT();
-
-	NVIC_EnableIRQ(PORT6_IRQn);
-	__enable_interrupt();
 
 	MAIN_MENU();
     KEYPAD_PRINT();
@@ -64,7 +67,7 @@ void main(void)
 	    if(pressed){
 	        LCD_COMMAND(1);
 	        MAIN_SELECTION();
-
+	        KEYPAD_PRINT();
 	        while((option == 1) || (option == 1) || (option == 1) || (option == 1));        // OPTION VAR FOR MENU SELECTION
 	            pressed = 0;                                                                // while
 
@@ -107,12 +110,12 @@ void MAIN_MENU(void){
 void MAIN_SELECTION(void){
 
     switch(numb){
-    case 4:
+    case 1:
         LCD_COMMAND(1);
         DOOR_MENU();
         LCD_DELAY(10);
 
-        //KEYPAD_PRINT();
+        KEYPAD_PRINT();
 
         option = 1;
         while(option == 1){
@@ -125,11 +128,11 @@ void MAIN_SELECTION(void){
         }
         break;
 
-    case 5:
+    case 2:
         LCD_COMMAND(1);
         MOTOR_MENU();
 
-        //KEYPAD_PRINT();
+        KEYPAD_PRINT();
 
         option = 2;
         while(option == 2){
@@ -142,12 +145,12 @@ void MAIN_SELECTION(void){
         }
         break;
 
-    case 11:
+    case 3:
         LCD_COMMAND(1);
         LIGHTS_MENU();
         LCD_DELAY(10);
 
-        //KEYPAD_PRINT();
+        KEYPAD_PRINT();
 
         option = 3;
         while(option == 3){
@@ -206,25 +209,57 @@ void DOOR_MENU(void){
 }
 
 void DOOR_SELECTION(void){
-
+// DOES NOT CLOSE DOOR, RED LIGHT REMAINS - DOORF BUTTON CLEAR ?
     if(DOOR_DEBOUNCE_BUTTONS() == 1){
-        printf("OPEN");
-        // SERVO OPEN DOOR
-        // GREEN LED LIGHTS UP
+        //P1->OUT |= BIT5;
+        //P1->OUT &=~ BIT0;
+        //door_button = 0;
+        printf("CLOSE\n");
     }
 
     if(DOOR_DEBOUNCE_BUTTONS() == 2){
-        printf("CLOSE");
-        // SERVO CLOSES DOOR
-        // RED LED LIGHTS UP
+        //P1->OUT |= BIT0;
+        //P1->OUT &=~ BIT5;
+        //door_button = 0;
+        printf("OPEN\n");
     }
 
     if(numb == 10){
         option = 0;
+        P1->OUT &=~ BIT0;
+        P1->OUT &=~ BIT5;
         // SERVO CLOSES DOOR
         LCD_COMMAND(1);
         MAIN_MENU();
     }
+
+}
+
+
+void PORT1_IRQHandler(void){
+
+    int status = P1->IFG;
+
+    if((status & BIT6) && (option == 1)){
+        P3->OUT |= BIT0;
+        P1->OUT &=~ BIT0;
+        door_Duty_cycle = .15;
+        DOOR_TIMERA_INIT();
+    }
+
+    if(status & BIT7 && (option == 1)){
+        P1->OUT |= BIT0;
+        P3->OUT &=~ BIT0;
+        door_Duty_cycle = .05;
+        DOOR_TIMERA_INIT();
+    }
+
+    if(status & BIT5 && (option == 2)){
+        Duty_cycle = 0.00;               // sets the duty cycle to 0%
+        MOTOR_TIMERA_INIT();
+    }
+
+    P1->IFG = 0;
 
 }
 
@@ -261,7 +296,10 @@ void MOTOR_MENU(void){
 
 void MOTOR_SELECTION(void){
 
+    pressed = KEYPAD_READ();
+    KEYPAD_PRINT();
     MOTOR_DUTY_CYCLE();
+    SYSTICK_DELAY_MS(10);
 
     if(MOTOR_DEBOUNCE_BUTTON() == 1){
         Duty_cycle = 0.0;
@@ -269,9 +307,9 @@ void MOTOR_SELECTION(void){
     }
 
     if(numb == 10){
-        option = 0;
         Duty_cycle = 0.0;
         MOTOR_DUTY_CYCLE();
+        option = 0;
         LCD_COMMAND(1);
         MAIN_MENU();
     }
@@ -309,8 +347,7 @@ void LIGHTS_MENU(void){
 }
 
 void LIGHTS_SELECTION(void){
-
-    if(LIGHTS_DEBOUNCE_BUTTONS() == 1){
+ /*   if(LIGHTS_DEBOUNCE_BUTTONS() == 1){
         // RED LIGHT TURNS ON
         // PWM FUNCTION
     }
@@ -330,6 +367,7 @@ void LIGHTS_SELECTION(void){
         LCD_COMMAND(1);
         MAIN_MENU();
     }
+    */
 }
 
 

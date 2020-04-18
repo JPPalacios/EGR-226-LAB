@@ -35,24 +35,19 @@ uint8_t KEYPAD_READ(void);      // prototype: keypad scan
 uint8_t numb, pressed;          // global variable declaration
 
 
-/* ----------------BUTTON FUNCTIONS----------------------*/
-
-
-void PORT6_IRQHandler(void);
-
-
 /* ----------------DOOR FUNCTIONS----------------------*/
 
 
 void DOOR_LED_BUTTONS_INIT(void);
+void DOOR_TIMERA_INIT(void);
 uint8_t DOOR_DEBOUNCE_BUTTONS(void);
 
 uint8_t door_button;
-
+double door_Duty_cycle;
 
 /* ----------------MOTOR FUNCTIONS----------------------*/
 
-
+void MOTOR_BUTTON_INIT(void);
 void MOTOR_TIMERA_INIT(void);
 void MOTOR_DUTY_CYCLE(void);
 uint8_t MOTOR_DEBOUNCE_BUTTON(void);
@@ -61,14 +56,14 @@ char motor_speed[10];
 uint8_t motor_button;
 double Duty_cycle;
 
-#define PWM_value (50000.0 * Duty_cycle);      // global variable: sets the PWM value that is read in Timer_A0
+//#define PWM_value (50000.0 * Duty_cycle);      // global variable: sets the PWM value that is read in Timer_A0
 
 
 /* ----------------LIGHTS FUNCTIONS----------------------*/
 
 
 void LIGHT_LED_BUTTONS_INIT(void);
-uint8_t LIGHTS_DEBOUNCE_BUTTONS(void);
+void LIGHTS_DEBOUNCE_BUTTONS(void);
 
 uint8_t light_button;
 
